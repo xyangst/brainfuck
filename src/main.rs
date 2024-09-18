@@ -8,8 +8,7 @@ use std::{
 enum InstKind {
     Add(u8),
     Sub(u8),
-    PointerIncr(u16),
-    PointerDecr(u16),
+    Move(i16),
     OutputByte,
     InputByte,
     JumpForward(u16),
@@ -30,15 +29,15 @@ impl InstKind {
             }
         }
         //return Self::map_inst(first_char, count).map(|inst| (&s[..=count as usize], inst));
-        Some((&s[..count], Self::map_inst(first_char, count)))
+        Some((&s[..count], Self::map_inst(first_char, count as i16)))
     }
 
-    fn map_inst(c: char, count: usize) -> Option<Self> {
+    fn map_inst(c: char, count: i16) -> Option<Self> {
         match c {
-            '>' => Some(InstKind::PointerIncr(count as u16)),
-            '<' => Some(InstKind::PointerDecr(count as u16)),
             '+' => Some(InstKind::Add(count as u8)),
             '-' => Some(InstKind::Sub(count as u8)),
+            '>' => Some(InstKind::Move(count)),
+            '<' => Some(InstKind::Move(-count)),
             '.' => Some(InstKind::OutputByte),
             ',' => Some(InstKind::InputByte),
             '[' => Some(InstKind::JumpForward(0)),
@@ -52,7 +51,7 @@ struct Interpreter {
     instructions: Vec<InstKind>,
     instruction_index: u16,
     data: Vec<u8>,
-    pointer: u16,
+    pointer: i16,
 }
 impl Interpreter {
     fn new(input: &str) -> Self {
@@ -99,8 +98,7 @@ impl Interpreter {
                 self.data[self.pointer as usize] =
                     self.data[self.pointer as usize].wrapping_sub(i as u8)
             }
-            InstKind::PointerIncr(i) => self.pointer += i,
-            InstKind::PointerDecr(i) => self.pointer -= i,
+            InstKind::Move(i) => self.pointer += i,
             InstKind::OutputByte => print!("{}", char::from(self.data[self.pointer as usize])),
             InstKind::JumpForward(offset) => {
                 if self.data[self.pointer as usize] == 0 {
