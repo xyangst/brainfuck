@@ -46,12 +46,12 @@ impl Interpreter {
         let mut instructions = Vec::new();
         let mut bracket_map: AHashMap<usize, usize> = AHashMap::new();
         let mut left_stack = Vec::new();
-        for (i, thing) in input
+        for (i, instruction) in input
             .chars()
             .filter_map(|c| InstKind::parse(&c))
             .enumerate()
         {
-            match thing {
+            match instruction {
                 InstKind::JumpForward => left_stack.push(i),
                 InstKind::JumpBackward => {
                     let v = left_stack.pop().expect("unmatched ]");
@@ -60,7 +60,7 @@ impl Interpreter {
                 }
                 _ => (),
             }
-            instructions.push(thing)
+            instructions.push(instruction)
         }
         assert!(left_stack.is_empty(), "unmatched [");
         Self {
@@ -71,7 +71,7 @@ impl Interpreter {
             pointer: 0,
         }
     }
-    fn next(&mut self) -> Option<()> {
+    fn next(&mut self) {
         match self.instructions[self.instruction_index] {
             InstKind::Add => self.data[self.pointer] += 1,
             InstKind::Sub => self.data[self.pointer] -= 1,
@@ -82,14 +82,14 @@ impl Interpreter {
                 if self.data[self.pointer] == 0 {
                     self.instruction_index =
                         *self.bracket_map.get(&self.instruction_index).unwrap();
-                    return None;
+                    return;
                 }
             }
             InstKind::JumpBackward => {
                 if self.data[self.pointer] != 0 {
                     self.instruction_index =
                         *self.bracket_map.get(&self.instruction_index).unwrap();
-                    return None;
+                    return;
                 }
             }
             InstKind::InputByte => {
@@ -101,13 +101,11 @@ impl Interpreter {
                 self.data[self.pointer] = buffer[0];
             }
         };
-        Some(())
+        self.instruction_index += 1;
     }
     fn run(&mut self) {
         while self.instruction_index != self.instructions.len() {
-            if self.next().is_some() {
-                self.instruction_index += 1;
-            }
+            self.next();
         }
     }
 }
