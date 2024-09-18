@@ -4,18 +4,16 @@ use std::{
     io::{self, Read},
 };
 
-use ahash::AHashMap;
-
 #[derive(Debug)]
 enum InstKind {
     Add(u8),
     Sub(u8),
-    PointerIncr(usize),
-    PointerDecr(usize),
+    PointerIncr(u16),
+    PointerDecr(u16),
     OutputByte,
     InputByte,
-    JumpForward(usize),
-    JumpBackward(usize),
+    JumpForward(u16),
+    JumpBackward(u16),
 }
 impl InstKind {
     fn parse(s: &str) -> Option<(&str, Option<Self>)> {
@@ -37,8 +35,8 @@ impl InstKind {
 
     fn map_inst(c: char, count: usize) -> Option<Self> {
         match c {
-            '>' => Some(InstKind::PointerIncr(count)),
-            '<' => Some(InstKind::PointerDecr(count)),
+            '>' => Some(InstKind::PointerIncr(count as u16)),
+            '<' => Some(InstKind::PointerDecr(count as u16)),
             '+' => Some(InstKind::Add(count as u8)),
             '-' => Some(InstKind::Sub(count as u8)),
             '.' => Some(InstKind::OutputByte),
@@ -52,9 +50,9 @@ impl InstKind {
 #[derive(Debug)]
 struct Interpreter {
     instructions: Vec<InstKind>,
-    instruction_index: usize,
+    instruction_index: u16,
     data: Vec<u8>,
-    pointer: usize,
+    pointer: u16,
 }
 impl Interpreter {
     fn new(input: &str) -> Self {
@@ -76,7 +74,7 @@ impl Interpreter {
                 InstKind::JumpBackward(_) => {
                     let opening = left_stack.pop().expect("unmatched ]");
 
-                    let offset = i - opening;
+                    let offset = (i - opening) as u16;
 
                     instructions[opening] = InstKind::JumpForward(offset);
                     instructions[i] = InstKind::JumpBackward(offset);
@@ -93,24 +91,26 @@ impl Interpreter {
         }
     }
     fn next(&mut self) {
-        match self.instructions[self.instruction_index] {
+        match self.instructions[self.instruction_index as usize] {
             InstKind::Add(i) => {
-                self.data[self.pointer] = self.data[self.pointer].wrapping_add(i as u8)
+                self.data[self.pointer as usize] =
+                    self.data[self.pointer as usize].wrapping_add(i as u8)
             }
             InstKind::Sub(i) => {
-                self.data[self.pointer] = self.data[self.pointer].wrapping_sub(i as u8)
+                self.data[self.pointer as usize] =
+                    self.data[self.pointer as usize].wrapping_sub(i as u8)
             }
             InstKind::PointerIncr(i) => self.pointer += i,
             InstKind::PointerDecr(i) => self.pointer -= i,
-            InstKind::OutputByte => print!("{}", char::from(self.data[self.pointer])),
+            InstKind::OutputByte => print!("{}", char::from(self.data[self.pointer as usize])),
             InstKind::JumpForward(offset) => {
-                if self.data[self.pointer] == 0 {
+                if self.data[self.pointer as usize] == 0 {
                     self.instruction_index += offset;
                     return;
                 }
             }
             InstKind::JumpBackward(offset) => {
-                if self.data[self.pointer] != 0 {
+                if self.data[self.pointer as usize] != 0 {
                     self.instruction_index -= offset;
                     return;
                 }
@@ -121,13 +121,13 @@ impl Interpreter {
                 io::stdin()
                     .read_exact(&mut buffer)
                     .expect("failed to read input");
-                self.data[self.pointer] = buffer[0];
+                self.data[self.pointer as usize] = buffer[0];
             }
         };
         self.instruction_index += 1;
     }
     fn run(&mut self) {
-        while self.instruction_index != self.instructions.len() {
+        while self.instruction_index != self.instructions.len() as u16 {
             self.next();
         }
     }
