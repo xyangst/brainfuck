@@ -66,7 +66,6 @@ impl Interpreter {
             }
             remaining = &remaining[sub_slice.len()..]; // Update remaining to exclude the parsed part
         }
-        dbg!(&instructions);
         let mut left_stack = Vec::new();
         for i in 0..instructions.len() {
             match instructions[i] {
