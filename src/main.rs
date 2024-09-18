@@ -1,9 +1,11 @@
 use std::{
-    collections::BTreeMap,
+    collections::{BTreeMap, HashMap},
     env::args,
     fs::read_to_string,
     io::{self, Read},
 };
+
+use ahash::AHashMap;
 
 #[derive(Debug)]
 enum InstKind {
@@ -35,14 +37,14 @@ impl InstKind {
 struct Interpreter {
     instructions: Vec<InstKind>,
     instruction_index: usize,
-    bracket_map: BTreeMap<usize, usize>,
+    bracket_map: AHashMap<usize, usize>,
     data: Vec<u8>,
     pointer: usize,
 }
 impl Interpreter {
     fn new(input: &str) -> Self {
         let mut instructions = Vec::new();
-        let mut bracket_map: BTreeMap<usize, usize> = BTreeMap::new();
+        let mut bracket_map: AHashMap<usize, usize> = AHashMap::new();
         let mut left_stack = Vec::new();
         for (i, thing) in input
             .chars()
@@ -91,6 +93,7 @@ impl Interpreter {
                 }
             }
             InstKind::InputByte => {
+                // does this even work?
                 let mut buffer = [0];
                 io::stdin()
                     .read_exact(&mut buffer)
