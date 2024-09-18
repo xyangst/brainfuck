@@ -105,13 +105,11 @@ impl Interpreter {
             InstKind::JumpForward(offset) => {
                 if self.data[self.pointer as usize] == 0 {
                     self.instruction_index += offset;
-                    return;
                 }
             }
             InstKind::JumpBackward(offset) => {
                 if self.data[self.pointer as usize] != 0 {
                     self.instruction_index -= offset;
-                    return;
                 }
             }
             InstKind::InputByte => {
