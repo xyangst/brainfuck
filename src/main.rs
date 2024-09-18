@@ -73,8 +73,8 @@ impl Interpreter {
     }
     fn next(&mut self) {
         match self.instructions[self.instruction_index] {
-            InstKind::Add => self.data[self.pointer] += 1,
-            InstKind::Sub => self.data[self.pointer] -= 1,
+            InstKind::Add => self.data[self.pointer] = self.data[self.pointer].wrapping_add(1),
+            InstKind::Sub => self.data[self.pointer] = self.data[self.pointer].wrapping_sub(1),
             InstKind::PointerIncr => self.pointer += 1,
             InstKind::PointerDecr => self.pointer -= 1,
             InstKind::OutputByte => print!("{}", char::from(self.data[self.pointer])),
