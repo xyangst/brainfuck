@@ -72,10 +72,8 @@ impl Interpreter {
                 InstKind::JumpBackward(_) => {
                     let opening = left_stack.pop().expect("unmatched ]");
 
-                    let offset = (i - opening) as u16;
-
-                    instructions[opening] = InstKind::JumpForward(offset);
-                    instructions[i] = InstKind::JumpBackward(offset);
+                    instructions[opening] = InstKind::JumpForward(i as u16);
+                    instructions[i] = InstKind::JumpBackward(opening as u16);
                 }
                 _ => (),
             }
@@ -100,14 +98,14 @@ impl Interpreter {
             }
             InstKind::Move(i) => self.pointer += i,
             InstKind::OutputByte => print!("{}", char::from(self.data[self.pointer as usize])),
-            InstKind::JumpForward(offset) => {
+            InstKind::JumpForward(new) => {
                 if self.data[self.pointer as usize] == 0 {
-                    self.instruction_index += offset;
+                    self.instruction_index = new;
                 }
             }
-            InstKind::JumpBackward(offset) => {
+            InstKind::JumpBackward(new) => {
                 if self.data[self.pointer as usize] != 0 {
-                    self.instruction_index -= offset;
+                    self.instruction_index = new;
                 }
             }
             InstKind::InputByte => {
